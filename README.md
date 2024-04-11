@@ -1,6 +1,6 @@
 # Caddy Thruster
 
-Caddy Thruster is a reverse proxy tool. Something like a Thruster
+Caddy Thruster is a reverse proxy tool. Something like a `Basecamp Thruster`
 
 ## Features
 
@@ -19,11 +19,12 @@ Navigate to the Caddy Thruster project directory, then compile the project
 go build
 ```
 
-After compilation, copy the caddy_thruster binary to your Rails project directory.
+After compilation, copy the `caddy_thruster` binary to your Rails project directory.
 
 ## Usage
 
-To run Caddy Thruster, use the `proxy-runner` command followed by the target server command and any necessary arguments. Caddy Thruster will set up a reverse proxy to your application, handling HTTP(S) traffic according to the provided configuration.
+To run Caddy Thruster, use the `proxy-runner` command followed by the target server command and any necessary arguments. 
+Caddy Thruster will set up a reverse proxy to your application
 
 ### Command Line Arguments
 
@@ -31,7 +32,7 @@ To run Caddy Thruster, use the `proxy-runner` command followed by the target ser
 - `--http_port <port>`: The port to listen on for HTTP traffic. Default: `80`.
 - `--https_port <port>`: The port to listen on for HTTPS traffic. Default: `443`.
 - `-l, --listen <address>`: The address to which to bind the listener. Default: `localhost`.
-- `--ssl_domain <domain>`: The domain name to use for SSL provisioning. If not set, SSL will be disabled. (Also in progress)
+- `--ssl_domain <domain>`: The domain name to use for SSL provisioning. If not set, SSL will be disabled. (in progress)
 - `-v, --debug`: Enable verbose debug logs.
 - `--access_log <bool>`: Enable the access log. Default: `true`.
 - `--no-compress`: Disable Zstandard and Gzip compression.
