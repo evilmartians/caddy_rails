@@ -45,3 +45,5 @@ Caddy Thruster will set up a reverse proxy to your application
 ```bash
 ./caddy_thruster proxy-runner bin/rails s --https_port 8443 --http_port 8012 --target_port 3001 
 ```
+
+**There is a recommendation to change the `https_port` to another from `443` because there is a problem with permissions.**
