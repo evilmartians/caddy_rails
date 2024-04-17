@@ -1,4 +1,4 @@
-package proxy_runner
+package thruster
 
 import (
 	"errors"
@@ -9,17 +9,17 @@ import (
 	"syscall"
 )
 
-// Just was copied from Thruster
-
 type UpstreamProcess struct {
-	Started chan struct{}
-	cmd     *exec.Cmd
+	Started  chan struct{}
+	cmd      *exec.Cmd
+	SyncMode bool
 }
 
-func NewUpstreamProcess(name string, arg ...string) *UpstreamProcess {
+func NewUpstreamProcess(name string, arg []string, syncMode bool) *UpstreamProcess {
 	return &UpstreamProcess{
-		Started: make(chan struct{}, 1),
-		cmd:     exec.Command(name, arg...),
+		Started:  make(chan struct{}, 1),
+		cmd:      exec.Command(name, arg...),
+		SyncMode: syncMode,
 	}
 }
 
@@ -35,14 +35,29 @@ func (p *UpstreamProcess) Run() (int, error) {
 	p.Started <- struct{}{}
 
 	go p.handleSignals()
-	err = p.cmd.Wait()
 
+	if p.SyncMode {
+		return p.waitAndHandleExit()
+	}
+
+	go p.waitAndHandleExit()
+	return 0, nil
+}
+
+func (p *UpstreamProcess) waitAndHandleExit() (int, error) {
+	err := p.cmd.Wait()
 	var exitErr *exec.ExitError
 	if errors.As(err, &exitErr) {
 		return exitErr.ExitCode(), nil
 	}
-
 	return 0, err
+}
+
+func (p *UpstreamProcess) Stop() error {
+	if p.cmd != nil && p.cmd.Process != nil {
+		return p.cmd.Process.Signal(syscall.SIGTERM) // syscall.SIGINT
+	}
+	return errors.New("process is not running")
 }
 
 func (p *UpstreamProcess) Signal(sig os.Signal) error {

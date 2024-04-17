@@ -1,4 +1,4 @@
-package proxy_runner
+package thruster
 
 import (
 	"syscall"
@@ -9,7 +9,7 @@ import (
 
 func TestUpstreamProcess(t *testing.T) {
 	t.Run("return exit code on exit", func(t *testing.T) {
-		p := NewUpstreamProcess("false")
+		p := NewUpstreamProcess("false", []string{}, true)
 		exitCode, err := p.Run()
 
 		assert.NoError(t, err)
@@ -20,7 +20,7 @@ func TestUpstreamProcess(t *testing.T) {
 		var exitCode int
 		var err error
 
-		p := NewUpstreamProcess("sleep", "10")
+		p := NewUpstreamProcess("sleep", []string{"10"}, true)
 
 		go func() {
 			exitCode, err = p.Run()

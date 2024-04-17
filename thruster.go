@@ -1,4 +1,4 @@
-package proxy_runner
+package thruster
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 
 func init() {
 	caddycmd.RegisterCommand(caddycmd.Command{
-		Name:  "proxy-runner",
+		Name:  "thruster",
 		Short: "Runs an external server and sets up a reverse proxy to it",
 		Long: `
 The proxy_runner command runs an external server specified as its argument and
@@ -43,7 +43,7 @@ func cmdProxyRunner(fs caddycmd.Flags) (int, error) {
 
 	slog.Info("Server started", "listen_domain", fs.String("listen"), "http", fs.String("http_port"), "https", fs.String("https_port"))
 
-	upstream := NewUpstreamProcess(fs.Arg(0), fs.Args()[1:]...)
+	upstream := NewUpstreamProcess(fs.Arg(0), fs.Args()[1:], true)
 
 	err := startCaddyReverseProxy(fs)
 	if err != nil {
