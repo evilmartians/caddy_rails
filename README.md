@@ -1,30 +1,31 @@
 # Caddy Thruster
 
-Caddy Thruster is a reverse proxy tool. Something like a `Basecamp Thruster`
+Caddy Thruster is a reverse proxy module designed to integrate seamlessly with Caddy, facilitating features like reverse proxying, automatic HTTPS, compression, and more.
 
 ## Features
 
-- **Reverse Proxy:** Easily forward requests to your application
-- **Automatic HTTPS:** (Not yet, It Needs to realize generating certs like Thruster)
-- **Compression:** Supports Gzip and Zstd compression
-- **Access Logging:** Keep track of incoming requests with optional access logging.
-- **Timeouts:** Configure read, write, and idle timeouts for connections.
-- **Debugging:** Verbose debug logs.
+- **Reverse Proxy:** Simplifies forwarding requests to your application.
+- **Automatic HTTPS:** Automatically manages SSL/TLS certificates. (Currently in progress)
+- **Compression:** Supports Gzip and Zstd for reducing data transfer sizes.
+- **Access Logging:** Enables detailed logging of incoming requests.
+- **Connection Timeouts:** Customizable read, write, and idle timeouts for connections.
+- **Debugging:** Provides extensive debug logs to troubleshoot issues.
 
 ## Installation
 
-Navigate to the Caddy Thruster project directory, then compile the project
+To install Caddy Thruster, navigate to the project directory and compile the module with Caddy:
 
 ```bash
-go build
+xcaddy build --with github.com/evilmartians/caddy_thruster
 ```
 
-After compilation, copy the `caddy_thruster` binary to your Rails project directory.
+After compilation, copy the `caddy` binary to your Rails project directory.
 
 ## Usage
 
-To run Caddy Thruster, use the `proxy-runner` command followed by the target server command and any necessary arguments. 
-Caddy Thruster will set up a reverse proxy to your application
+### Command Line Interface
+Run Caddy Thruster directly from the command line by specifying your target server command and its arguments. 
+Caddy Thruster sets up a reverse proxy to your application.
 
 ### Command Line Arguments
 
@@ -43,7 +44,50 @@ Caddy Thruster will set up a reverse proxy to your application
 ### Examples
 
 ```bash
-./caddy_thruster proxy-runner bin/rails s --https_port 8443 --http_port 8012 --target_port 3001 
+./caddy thruster bin/rails s --https_port 8443 --http_port 8012 --target_port 3000
 ```
 
-**There is a recommendation to change the `https_port` to another from `443` because there is a problem with permissions.**
+### Configuration via Caddyfile
+
+Configure Caddy Thruster using the Caddyfile as follows:
+
+```caddyfile
+{
+  thruster bin/rails s -p {$CADDY_BACKEND_PORT}
+}
+
+http://{$CADDY_HOST}:{$CADDY_PORT} {
+  root * ./public
+  @notStatic {
+    not {
+      file {
+        try_files {path}
+      }
+    }
+  }
+
+  encode gzip zstd
+
+  reverse_proxy @notStatic {
+    to localhost:{$CADDY_BACKEND_PORT}
+
+    header_up X-Real-IP {remote_host}
+    header_up X-Forwarded-Proto {scheme}
+    header_up Access-Control-Allow-Origin *
+    header_up Access-Control-Allow-Credentials true
+    header_up Access-Control-Allow-Headers Cache-Control,Content-Type
+    transport http {
+      read_buffer 8192
+    }
+  }
+
+  file_server
+}
+```
+
+Run the command with environment variables:
+
+```bash
+    CADDY_HOST=localhost CADDY_PORT=3000 CADDY_BACKEND_PORT=4000 ./caddy run
+```
+

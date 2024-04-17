@@ -1,4 +1,4 @@
-package proxy_runner
+package thruster
 
 import (
 	"encoding/json"
@@ -12,41 +12,39 @@ import (
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp/headers"
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp/reverseproxy"
 	"go.uber.org/zap"
+	"log"
 )
 
 func startCaddyReverseProxy(fs cmd.Flags) error {
-	routes := createRoutes(fs)
-	httpApp := createHTTPApp(fs, routes)
+	route := createGroupedRoutes(fs)
+	httpApp := createHTTPApp(fs, route)
 
 	cfg := createCaddyConfig(httpApp, fs.Bool("debug"))
 	return caddy.Run(cfg)
 }
 
-func createRoutes(fs cmd.Flags) caddyhttp.RouteList {
-	routes := caddyhttp.RouteList{}
-	if !fs.Bool("no-compress") {
-		routes = append(routes, createEncodeRoute())
-	}
-	routes = append(routes, createReverseProxyRoute(fs))
-	//routes = append(routes, createFileServerRoute(fs))
-
-	return routes
-}
-
 func createEncodeRoute() caddyhttp.Route {
-	zstd, _ := caddy.GetModule("http.encoders.zstd")
-	gzip, _ := caddy.GetModule("http.encoders.gzip")
+	gzip, err := caddy.GetModule("http.encoders.gzip")
+	if err != nil {
+		log.Fatalf("Failed to load gzip module: %v", err)
+	}
 
-	encodeHandler := encode.Encode{
-		EncodingsRaw: caddy.ModuleMap{
-			"gzip": caddyconfig.JSON(gzip.New(), nil),
-			"zstd": caddyconfig.JSON(zstd.New(), nil),
-		},
-		Prefer: []string{"zstd", "gzip"},
+	zstd, err := caddy.GetModule("http.encoders.zstd")
+	if err != nil {
+		log.Fatalf("Failed to load zstd module: %v", err)
 	}
-	return caddyhttp.Route{
-		HandlersRaw: []json.RawMessage{caddyconfig.JSONModuleObject(encodeHandler, "handler", "encode", nil)},
+
+	encodeRoute := caddyhttp.Route{
+		HandlersRaw: []json.RawMessage{caddyconfig.JSONModuleObject(encode.Encode{
+			EncodingsRaw: caddy.ModuleMap{
+				"zstd": caddyconfig.JSON(zstd.New(), nil),
+				"gzip": caddyconfig.JSON(gzip.New(), nil),
+			},
+			Prefer: []string{"zstd", "gzip"},
+		}, "handler", "encode", nil)},
 	}
+
+	return encodeRoute
 }
 
 func createReverseProxyRoute(fs cmd.Flags) caddyhttp.Route {
@@ -76,9 +74,9 @@ func createFileServerRoute(fs cmd.Flags) caddyhttp.Route {
 	}
 }
 
-func createHTTPApp(fs cmd.Flags, routes caddyhttp.RouteList) caddyhttp.App {
-	httpServer := createServer(fs.String("http_port"), routes, fs)
-	httpsServer := createServer(fs.String("https_port"), routes, fs)
+func createHTTPApp(fs cmd.Flags, route caddyhttp.Route) caddyhttp.App {
+	httpServer := createServer(fs.String("http_port"), caddyhttp.RouteList{route}, fs)
+	httpsServer := createServer(fs.String("https_port"), caddyhttp.RouteList{route}, fs)
 
 	return caddyhttp.App{
 		Servers: map[string]*caddyhttp.Server{
@@ -118,4 +116,23 @@ func createCaddyConfig(httpApp caddyhttp.App, debug bool) *caddy.Config {
 		}
 	}
 	return cfg
+}
+
+func createGroupedRoutes(fs cmd.Flags) caddyhttp.Route {
+	routes := caddyhttp.RouteList{}
+
+	if !fs.Bool("no-compress") {
+		routes = append(routes, createEncodeRoute())
+	}
+
+	routes = append(routes,
+		createReverseProxyRoute(fs),
+		createFileServerRoute(fs),
+	)
+
+	subroute := caddyhttp.Subroute{Routes: routes}
+
+	return caddyhttp.Route{
+		HandlersRaw: []json.RawMessage{caddyconfig.JSONModuleObject(subroute, "handler", "subroute", nil)},
+	}
 }
