@@ -1,4 +1,4 @@
-package thruster
+package utils
 
 import (
 	"encoding/json"
@@ -15,7 +15,7 @@ import (
 	"log"
 )
 
-func startCaddyReverseProxy(fs cmd.Flags) error {
+func StartCaddyReverseProxy(fs cmd.Flags) error {
 	route := createGroupedRoutes(fs)
 	httpApp := createHTTPApp(fs, route)
 

@@ -1,4 +1,4 @@
-package thruster
+package utils
 
 import (
 	"syscall"

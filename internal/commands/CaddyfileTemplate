@@ -1,0 +1,71 @@
+{
+  {$CADDY_GLOBAL_OPTIONS}
+
+  server-rails bin/rails s -p {{.BackendPort}}
+
+  {{ if .Debug }}debug{{ end }}
+  {{ if .AccessLog }}log{{ end }}
+}
+
+http://{{.HttpHost}}:{{.HttpPort}} {
+  root * ./public
+  @notStatic {
+    not {
+      file {
+        try_files {path}
+      }
+    }
+  }
+
+  {{ if .EnableCompression }}
+  encode gzip zstd
+  {{ end }}
+
+  reverse_proxy @notStatic {
+    to localhost:{{.BackendPort}}
+
+    header_up X-Real-IP {remote_host}
+    header_up X-Forwarded-Proto {scheme}
+    header_up Access-Control-Allow-Origin *
+    header_up Access-Control-Allow-Credentials true
+    header_up Access-Control-Allow-Headers Cache-Control,Content-Type
+    transport http {
+      read_buffer 8192
+    }
+  }
+
+  file_server
+}
+
+{{ if .HttpsEnable }}
+https://{{ if .SSLDomain }}{{ .SSLDomain }}{{ else }}{{.HttpHost}}{{ end }} {
+  tls internal
+  root * ./public
+  @notStatic {
+    not {
+      file {
+        try_files {path}
+      }
+    }
+  }
+
+  {{ if .EnableCompression }}
+  encode gzip zstd
+  {{ end }}
+
+  reverse_proxy @notStatic {
+    to localhost:{$CADDY_BACKEND_PORT}
+
+    header_up X-Real-IP {remote_host}
+    header_up X-Forwarded-Proto {scheme}
+    header_up Access-Control-Allow-Origin *
+    header_up Access-Control-Allow-Credentials true
+    header_up Access-Control-Allow-Headers Cache-Control,Content-Type
+    transport http {
+      read_buffer 8192
+    }
+  }
+
+  file_server
+}
+{{ end }}

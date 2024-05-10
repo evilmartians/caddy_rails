@@ -1,6 +1,6 @@
 # Caddy Thruster
 
-Caddy Thruster is a reverse proxy module designed to integrate seamlessly with Caddy, facilitating features like reverse proxying, automatic HTTPS, compression, and more.
+CaddyRails is a reverse proxy module for Ruby on Rails designed to integrate with Caddy, facilitating features like reverse proxying, automatic HTTPS, compression, and more.
 
 ## Features
 
@@ -13,22 +13,25 @@ Caddy Thruster is a reverse proxy module designed to integrate seamlessly with C
 
 ## Installation
 
-To install Caddy Thruster, navigate to the project directory and compile the module with Caddy:
+Install CaddyRails by navigating to your project directory and compiling the module with the following command:
 
 ```bash
-xcaddy build --with github.com/evilmartians/caddy_thruster
+make build
 ```
 
-After compilation, copy the `caddy` binary to your Rails project directory.
+Once compiled, ensure that the `caddy_rails` binary is located within your Rails project directory for easy access.
 
-## Usage
+## Usage Instructions
 
-### Command Line Interface
-Run Caddy Thruster directly from the command line by specifying your target server command and its arguments. 
-Caddy Thruster sets up a reverse proxy to your application.
+## Starting the Server
+Initiate CaddyRails directly from the command line by specifying your Rails server command alongside necessary arguments. 
+The tool sets up a reverse proxy automatically.
+
+```bash
+./caddy_rails serve-rails bin/rails s --https_port 8443 --http_port 8012 --target_port 3000
+```
 
 ### Command Line Arguments
-
 - `--target_port <port>`: The port that your server should run on.  ProxyRunner will set the PORT environment variable to this value. Default: `3000`.
 - `--http_port <port>`: The port to listen on for HTTP traffic. Default: `80`.
 - `--https_port <port>`: The port to listen on for HTTPS traffic. Default: `443`.
@@ -41,53 +44,38 @@ Caddy Thruster sets up a reverse proxy to your application.
 - `--http_read_timeout <duration>`: The maximum time a client can take to send the request headers. Default: `30s`.
 - `--http_write_timeout <duration>`: The maximum time during which the client must read the response. Default: `30s`.
 
-### Examples
+## Configuration File Generation
+Generate a customized Caddyfile by running:
 
 ```bash
-./caddy thruster bin/rails s --https_port 8443 --http_port 8012 --target_port 3000
+./caddy_rails config-init --folder_path "./config" --http_host "myapp.local" --https_enable
 ```
 
-### Configuration via Caddyfile
+This command creates a Caddyfile in the specified directory, tailoring it with options for SSL, compression, and logging based on provided parameters.
 
-Configure Caddy Thruster using the Caddyfile as follows:
+### Command Line Arguments
+- `--folder_path <string>`: Directory to generate the Caddyfile in. Defaults to the current directory
+- `--http_host <string>`: Host address for the HTTP server.. Default: `localhost`.
+- `--http_port <string>`: The port for HTTP traffic. Default: `80`.
+- `--enable_debug <bool>`: Enable verbose debug logs.
+- `--access_log <bool>`: Enable the access log. Default: `true`.
+- `--ssl_domain <string>`: The domain name for SSL. If empty, SSL is disabled
+- `--backend_port <string>`: THe port that the backend service listens on. Default is `8080`
+- `--https_enable <bool>`: Enable HTTPS configuration. Default `false`.
+- `--enable_compression`: Enable response compression using gzip and zstd
 
-```caddyfile
-{
-  thruster bin/rails s -p {$CADDY_BACKEND_PORT}
-}
 
-http://{$CADDY_HOST}:{$CADDY_PORT} {
-  root * ./public
-  @notStatic {
-    not {
-      file {
-        try_files {path}
-      }
-    }
-  }
+## Managing Application Lifecycle
+You can manage the running Rails application in another console session using:
 
-  encode gzip zstd
+#### Phased/Hot Restart
 
-  reverse_proxy @notStatic {
-    to localhost:{$CADDY_BACKEND_PORT}
-
-    header_up X-Real-IP {remote_host}
-    header_up X-Forwarded-Proto {scheme}
-    header_up Access-Control-Allow-Origin *
-    header_up Access-Control-Allow-Credentials true
-    header_up Access-Control-Allow-Headers Cache-Control,Content-Type
-    transport http {
-      read_buffer 8192
-    }
-  }
-
-  file_server
-}
-```
-
-Run the command with environment variables:
-
+- Stopping the Server: `./caddy_rails serve-rails --stop`
+- Restarting the Server: `./caddy_rails serve-rails --restart`
+- Phased Restart for Puma or Hot Restart for Unicorn:
 ```bash
-    CADDY_HOST=localhost CADDY_PORT=3000 CADDY_BACKEND_PORT=4000 ./caddy run
+./caddy_rails serve-rails --phased_restart --server-type puma
+./caddy_rails serve-rails --phased_restart --server-type unicorn 
 ```
 
+These commands facilitate seamless application management, ensuring minimal downtime and flexible maintenance operations.
