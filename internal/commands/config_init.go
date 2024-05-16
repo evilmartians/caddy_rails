@@ -25,6 +25,7 @@ type TemplateParams struct {
 	HttpsEnable       bool
 	EnableCompression bool
 	BackendPort       string
+	HttpsPort         string
 }
 
 func init() {
@@ -37,6 +38,7 @@ This tool simplifies initial Caddyfile setup for custom server configurations.`,
 			cmd.Flags().String("folder_path", ".", "Directory to generate the Caddyfile in. Defaults to the current directory.")
 			cmd.Flags().String("http_host", "localhost", "Host address for the HTTP server.")
 			cmd.Flags().String("http_port", "80", "Port for HTTP traffic.")
+			cmd.Flags().String("https_port", "443", "Port for HTTPS traffic.")
 			cmd.Flags().Bool("enable_debug", false, "Enable debug mode for detailed logs")
 			cmd.Flags().String("ssl_domain", "", "Domain name for SSL. If empty, SSL is disabled")
 			cmd.Flags().String("backend_port", "8080", "Port that the backend service listens on")
@@ -63,13 +65,10 @@ func cmdGenerateCaddyfile(fs caddycmd.Flags) (int, error) {
 		HttpHost:          fs.String("http_host"),
 		HttpPort:          fs.String("http_port"),
 		BackendPort:       fs.String("backend_port"),
+		HttpsPort:         fs.String("https_port"),
 	}
 
-	funcMap := template.FuncMap{
-		"env": os.Getenv,
-	}
-
-	tmpl, err := template.New("Caddyfile").Funcs(funcMap).Parse(caddyfileTemplate)
+	tmpl, err := template.New("Caddyfile").Parse(caddyfileTemplate)
 	if err != nil {
 		return 1, fmt.Errorf("error parsing template: %v", err)
 	}

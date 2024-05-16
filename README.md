@@ -57,6 +57,7 @@ This command creates a Caddyfile in the specified directory, tailoring it with o
 - `--folder_path <string>`: Directory to generate the Caddyfile in. Defaults to the current directory
 - `--http_host <string>`: Host address for the HTTP server. Default: `localhost`
 - `--http_port <string>`: The port for HTTP traffic. Default: `80`
+- `--https_port <string>`: The port for HTTP traffic. Default: `443`
 - `--enable_debug <bool>`: Enable verbose debug logs
 - `--access_log <bool>`: Enable the access log. Default: `true`
 - `--ssl_domain <string>`: The domain name for SSL. If empty, SSL is disabled
@@ -64,18 +65,16 @@ This command creates a Caddyfile in the specified directory, tailoring it with o
 - `--https_enable <bool>`: Enable HTTPS configuration. Default `false`
 - `--enable_compression`: Enable response compression using gzip, brotli and zstd
 
-### Environment Variables
-You can also set parameters using environment variables with the prefix `CADDY_`. These environment variables will be used if they are set, providing flexibility for different deployment environments.
+### Running the application
 
-- `CADDY_GLOBAL_OPTIONS`: Custom global options for the Caddy configuration
-- `CADDY_BACKEND_PORT`: The port that the backend service listens on
-- `CADDY_HTTP_HOST`: Host address for the HTTP server
-- `CADDY_HTTP_PORT`: The port for HTTP traffic
-- `CADDY_ENABLE_DEBUG`: Enable verbose debug logs
-- `CADDY_ACCESS_LOG`: Enable the access log
-- `CADDY_SSL_DOMAIN`: The domain name for SSL
-- `CADDY_HTTPS_ENABLE`: Enable HTTPS configuration
-- `CADDY_ENABLE_COMPRESSION`: Enable response compression using gzip, brotli and zstd
+After the generation the `Caddyfile` you can run project by this command
+
+```bash
+    ./caddy_rails run
+```
+
+**important:** The caddy_rails can do not have enough permissions for ports 80 and 443 on locally.
+So you can change these ports by `--http_port` and `--https_port` 
 
 ## Managing Application Lifecycle
 You can manage the running Rails application in another console session using:
