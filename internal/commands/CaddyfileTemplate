@@ -1,13 +1,11 @@
 {
-  {$CADDY_GLOBAL_OPTIONS}
-
-  server-rails bin/rails s -p {{.BackendPort}}
-
-  {{ if .Debug }}debug{{ end }}
-  {{ if .AccessLog }}log{{ end }}
+  {{env "CADDY_GLOBAL_OPTIONS"}}
+  serve-rails bin/rails s -p {{or (env "CADDY_BACKEND_PORT") .BackendPort}}
+  {{if or (env "CADDY_DEBUG") .Debug}}debug{{end}}
+  {{if or (env "CADDY_ACCESS_LOG") .AccessLog}}log{{end}}
 }
 
-http://{{.HttpHost}}:{{.HttpPort}} {
+http://{{or (env "CADDY_HTTP_HOST") .HttpHost}}:{{or (env "CADDY_HTTP_PORT") .HttpPort}} {
   root * ./public
   @notStatic {
     not {
@@ -17,12 +15,12 @@ http://{{.HttpHost}}:{{.HttpPort}} {
     }
   }
 
-  {{ if .EnableCompression }}
-  encode gzip zstd
-  {{ end }}
+  {{if or (env "CADDY_ENABLE_COMPRESSION") .EnableCompression}}
+  encode br gzip zstd
+  {{end}}
 
   reverse_proxy @notStatic {
-    to localhost:{{.BackendPort}}
+    to localhost:{{or (env "CADDY_BACKEND_PORT") .BackendPort}}
 
     header_up X-Real-IP {remote_host}
     header_up X-Forwarded-Proto {scheme}
@@ -37,8 +35,8 @@ http://{{.HttpHost}}:{{.HttpPort}} {
   file_server
 }
 
-{{ if .HttpsEnable }}
-https://{{ if .SSLDomain }}{{ .SSLDomain }}{{ else }}{{.HttpHost}}{{ end }} {
+{{if or (env "CADDY_HTTPS_ENABLE") .HttpsEnable}}
+https://{{if (env "CADDY_SSL_DOMAIN")}}{{env "CADDY_SSL_DOMAIN"}}{{else if .SSLDomain}}{{.SSLDomain}}{{else}}{{.HttpHost}}{{end}} {
   tls internal
   root * ./public
   @notStatic {
@@ -49,12 +47,12 @@ https://{{ if .SSLDomain }}{{ .SSLDomain }}{{ else }}{{.HttpHost}}{{ end }} {
     }
   }
 
-  {{ if .EnableCompression }}
+  {{if or (env "CADDY_ENABLE_COMPRESSION") .EnableCompression}}
   encode gzip zstd
-  {{ end }}
+  {{end}}
 
   reverse_proxy @notStatic {
-    to localhost:{$CADDY_BACKEND_PORT}
+    to localhost:{{or (env "CADDY_BACKEND_PORT") .BackendPort}}
 
     header_up X-Real-IP {remote_host}
     header_up X-Forwarded-Proto {scheme}
@@ -68,4 +66,4 @@ https://{{ if .SSLDomain }}{{ .SSLDomain }}{{ else }}{{.HttpHost}}{{ end }} {
 
   file_server
 }
-{{ end }}
+{{end}}

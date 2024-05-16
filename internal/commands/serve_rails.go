@@ -103,7 +103,7 @@ func runUpstreamProcess(fs caddycmd.Flags, pidFile string) (int, error) {
 	upstream := utils.NewUpstreamProcess(fs.Arg(0), fs.Args()[1:], true, pidFile)
 	exitCode, err := upstream.Run()
 	if err != nil {
-		return 1, fmt.Errorf("Failed to run upstream process: %v", err)
+		return 1, fmt.Errorf("failed to run upstream process: %v", err)
 	}
 	return exitCode, nil
 }

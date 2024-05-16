@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
+	"time"
 )
 
 const DefaultPidPath = "tmp/pids/server.pid"
@@ -34,34 +35,40 @@ func NewUpstreamProcess(name string, arg []string, syncMode bool, pidFile string
 }
 
 func (p *UpstreamProcess) Run() (int, error) {
-	p.cmd.Stdout = os.Stdout
-	p.cmd.Stderr = os.Stderr
-
 	if p.PidFile != "" {
 		pidData, err := os.ReadFile(p.PidFile)
 		if err == nil {
-			pid, _ := strconv.Atoi(string(pidData))
-			p.cmd = &exec.Cmd{Process: &os.Process{Pid: pid}}
-			p.Started <- struct{}{}
-			if p.SyncMode {
-				return p.waitAndHandleExit()
+			pid, err := strconv.Atoi(string(pidData))
+			if err == nil {
+				p.cmd = &exec.Cmd{Process: &os.Process{Pid: pid}}
+				p.Started <- struct{}{}
+				if p.SyncMode {
+					return p.waitAndHandleExit()
+				}
+				go p.waitAndHandleExit()
+				return 0, nil
 			}
-			go p.waitAndHandleExit()
-			return 0, nil
 		}
 	}
+
+	p.cmd.Stdout = os.Stdout
+	p.cmd.Stderr = os.Stderr
 
 	err := p.cmd.Start()
 	if err != nil {
 		return 0, err
 	}
 
+	//_ = os.WriteFile(p.PidFile, []byte(fmt.Sprintf("%d", p.cmd.Process.Pid)), 0644)
+
 	p.Started <- struct{}{}
+
 	go p.handleSignals()
 
 	if p.SyncMode {
 		return p.waitAndHandleExit()
 	}
+
 	go p.waitAndHandleExit()
 	return 0, nil
 }
@@ -75,20 +82,60 @@ func (p *UpstreamProcess) waitAndHandleExit() (int, error) {
 	return 0, err
 }
 
+//func (p *UpstreamProcess) Stop() error {
+//	pidData, err := os.ReadFile(p.PidFile)
+//	if err != nil {
+//		return err
+//	}
+//	pid, err := strconv.Atoi(string(pidData))
+//	if err != nil {
+//		return err
+//	}
+//	process, err := os.FindProcess(pid)
+//	if err != nil {
+//		return err
+//	}
+//
+//	return process.Signal(syscall.SIGTERM)
+//}
+
 func (p *UpstreamProcess) Stop() error {
-	pidData, err := os.ReadFile(p.PidFile)
-	if err != nil {
-		return err
+	if p.PidFile != "" {
+		pidData, err := os.ReadFile(p.PidFile)
+		if err != nil {
+			return err
+		}
+		pid, err := strconv.Atoi(string(pidData))
+		if err != nil {
+			return err
+		}
+		process, err := os.FindProcess(pid)
+		if err != nil {
+			return err
+		}
+		if err := process.Signal(syscall.SIGTERM); err != nil {
+			return err
+		}
+
+		// Wait for the process to exit with a timeout
+		done := make(chan struct{})
+		go func() {
+			_, _ = process.Wait()
+			close(done)
+		}()
+		select {
+		case <-done:
+			return nil
+		case <-time.After(5 * time.Second):
+			return errors.New("process did not terminate in time")
+		}
 	}
-	pid, err := strconv.Atoi(string(pidData))
-	if err != nil {
-		return err
+
+	if p.cmd != nil && p.cmd.Process != nil {
+		return p.cmd.Process.Signal(syscall.SIGTERM)
 	}
-	process, err := os.FindProcess(pid)
-	if err != nil {
-		return err
-	}
-	return process.Signal(syscall.SIGTERM)
+
+	return errors.New("process is not running or PID file is not specified")
 }
 
 func (p *UpstreamProcess) PhasedRestart(serverType string) error {

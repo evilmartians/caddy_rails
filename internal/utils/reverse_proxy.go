@@ -34,13 +34,19 @@ func createEncodeRoute() caddyhttp.Route {
 		log.Fatalf("Failed to load zstd module: %v", err)
 	}
 
+	br, err := caddy.GetModule("http.encoders.br")
+	if err != nil {
+		log.Fatalf("Failed to load br module: %v", err)
+	}
+
 	encodeRoute := caddyhttp.Route{
 		HandlersRaw: []json.RawMessage{caddyconfig.JSONModuleObject(encode.Encode{
 			EncodingsRaw: caddy.ModuleMap{
 				"zstd": caddyconfig.JSON(zstd.New(), nil),
 				"gzip": caddyconfig.JSON(gzip.New(), nil),
+				"br":   caddyconfig.JSON(br.New(), nil),
 			},
-			Prefer: []string{"zstd", "gzip"},
+			Prefer: []string{"zstd", "br", "gzip"},
 		}, "handler", "encode", nil)},
 	}
 

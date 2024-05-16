@@ -19,39 +19,37 @@ type CaddyRailsApp struct {
 	PidFile string   `json:"pid_file,omitempty"`
 
 	process *utils.UpstreamProcess
+	stopCh  chan struct{}
 }
 
-// Provision implements caddy.Provisioner
 func (a *CaddyRailsApp) Provision(ctx caddy.Context) error {
 	if len(a.Command) == 0 {
 		return fmt.Errorf("there is not any command")
 	}
 
-	//
-	//os.Setenv("PORT", fmt.Sprintf("%d", a.TargetPort))
-
 	a.process = utils.NewUpstreamProcess(a.Command[0], a.Command[1:], false, a.PidFile)
+	a.stopCh = make(chan struct{})
 
 	return nil
 }
 
-// Start starts the app.
 func (a CaddyRailsApp) Start() error {
 	_, err := a.process.Run()
 
 	return err
 }
 
-// Stop stops the app.
 func (a *CaddyRailsApp) Stop() error {
-	caddy.Log().Info("CaddyRails stopped 🐘")
+	caddy.Log().Info("CaddyRails stopped")
 
+	if a.process != nil {
+		return a.process.Stop()
+	}
+
+	close(a.stopCh)
 	return nil
-
-	//return a.process.Stop()
 }
 
-// CaddyModule implements caddy.ModuleInfo
 func (a CaddyRailsApp) CaddyModule() caddy.ModuleInfo {
 	return caddy.ModuleInfo{
 		ID:  "serve-rails",

@@ -6,7 +6,7 @@ CaddyRails is a reverse proxy module for Ruby on Rails designed to integrate wit
 
 - **Reverse Proxy:** Simplifies forwarding requests to your application.
 - **Automatic HTTPS:** Automatically manages SSL/TLS certificates. (Currently in progress)
-- **Compression:** Supports Gzip and Zstd for reducing data transfer sizes.
+- **Compression:** Supports Gzip, Brotli and Zstd for reducing data transfer sizes.
 - **Access Logging:** Enables detailed logging of incoming requests.
 - **Connection Timeouts:** Customizable read, write, and idle timeouts for connections.
 - **Debugging:** Provides extensive debug logs to troubleshoot issues.
@@ -39,7 +39,7 @@ The tool sets up a reverse proxy automatically.
 - `--ssl_domain <domain>`: The domain name to use for SSL provisioning. If not set, SSL will be disabled. (in progress)
 - `-v, --debug`: Enable verbose debug logs.
 - `--access_log <bool>`: Enable the access log. Default: `true`.
-- `--no-compress`: Disable Zstandard and Gzip compression.
+- `--no-compress`: Disable Brotli, Zstandard and Gzip compression
 - `--http_idle_timeout <duration>`: The maximum time a client can be idle before the connection is closed. Default: `60s`.
 - `--http_read_timeout <duration>`: The maximum time a client can take to send the request headers. Default: `30s`.
 - `--http_write_timeout <duration>`: The maximum time during which the client must read the response. Default: `30s`.
@@ -55,15 +55,27 @@ This command creates a Caddyfile in the specified directory, tailoring it with o
 
 ### Command Line Arguments
 - `--folder_path <string>`: Directory to generate the Caddyfile in. Defaults to the current directory
-- `--http_host <string>`: Host address for the HTTP server.. Default: `localhost`.
-- `--http_port <string>`: The port for HTTP traffic. Default: `80`.
-- `--enable_debug <bool>`: Enable verbose debug logs.
-- `--access_log <bool>`: Enable the access log. Default: `true`.
+- `--http_host <string>`: Host address for the HTTP server. Default: `localhost`
+- `--http_port <string>`: The port for HTTP traffic. Default: `80`
+- `--enable_debug <bool>`: Enable verbose debug logs
+- `--access_log <bool>`: Enable the access log. Default: `true`
 - `--ssl_domain <string>`: The domain name for SSL. If empty, SSL is disabled
 - `--backend_port <string>`: THe port that the backend service listens on. Default is `8080`
-- `--https_enable <bool>`: Enable HTTPS configuration. Default `false`.
-- `--enable_compression`: Enable response compression using gzip and zstd
+- `--https_enable <bool>`: Enable HTTPS configuration. Default `false`
+- `--enable_compression`: Enable response compression using gzip, brotli and zstd
 
+### Environment Variables
+You can also set parameters using environment variables with the prefix `CADDY_`. These environment variables will be used if they are set, providing flexibility for different deployment environments.
+
+- `CADDY_GLOBAL_OPTIONS`: Custom global options for the Caddy configuration
+- `CADDY_BACKEND_PORT`: The port that the backend service listens on
+- `CADDY_HTTP_HOST`: Host address for the HTTP server
+- `CADDY_HTTP_PORT`: The port for HTTP traffic
+- `CADDY_ENABLE_DEBUG`: Enable verbose debug logs
+- `CADDY_ACCESS_LOG`: Enable the access log
+- `CADDY_SSL_DOMAIN`: The domain name for SSL
+- `CADDY_HTTPS_ENABLE`: Enable HTTPS configuration
+- `CADDY_ENABLE_COMPRESSION`: Enable response compression using gzip, brotli and zstd
 
 ## Managing Application Lifecycle
 You can manage the running Rails application in another console session using:

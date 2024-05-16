@@ -65,7 +65,11 @@ func cmdGenerateCaddyfile(fs caddycmd.Flags) (int, error) {
 		BackendPort:       fs.String("backend_port"),
 	}
 
-	tmpl, err := template.New("Caddyfile").Parse(caddyfileTemplate)
+	funcMap := template.FuncMap{
+		"env": os.Getenv,
+	}
+
+	tmpl, err := template.New("Caddyfile").Funcs(funcMap).Parse(caddyfileTemplate)
 	if err != nil {
 		return 1, fmt.Errorf("error parsing template: %v", err)
 	}
