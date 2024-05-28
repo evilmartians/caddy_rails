@@ -59,8 +59,6 @@ func (p *UpstreamProcess) Run() (int, error) {
 		return 0, err
 	}
 
-	//_ = os.WriteFile(p.PidFile, []byte(fmt.Sprintf("%d", p.cmd.Process.Pid)), 0644)
-
 	p.Started <- struct{}{}
 
 	go p.handleSignals()
@@ -81,24 +79,6 @@ func (p *UpstreamProcess) waitAndHandleExit() (int, error) {
 	}
 	return 0, err
 }
-
-//func (p *UpstreamProcess) Stop() error {
-//	pidData, err := os.ReadFile(p.PidFile)
-//	if err != nil {
-//		return err
-//	}
-//	pid, err := strconv.Atoi(string(pidData))
-//	if err != nil {
-//		return err
-//	}
-//	process, err := os.FindProcess(pid)
-//	if err != nil {
-//		return err
-//	}
-//
-//	return process.Signal(syscall.SIGTERM)
-//}
-
 func (p *UpstreamProcess) Stop() error {
 	if p.PidFile != "" {
 		pidData, err := os.ReadFile(p.PidFile)
