@@ -1,4 +1,4 @@
 .idea
-caddy_thruster
+bin/caddy_rails
 go.work
 go.work.sum
