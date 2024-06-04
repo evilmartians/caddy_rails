@@ -32,13 +32,13 @@ The tool sets up a reverse proxy automatically.
 ```
 
 ### Command Line Arguments
-- `--target-port <port>`: The port that your server should run on.  ProxyRunner will set the PORT environment variable to this value. Default: `3000`.
-- `--http-port <port>`: The port to listen on for HTTP traffic. Default: `80`.
-- `--https-port <port>`: The port to listen on for HTTPS traffic. Default: `443`.
-- `-l, --listen <address>`: The address to which to bind the listener. Default: `localhost`.
-- `--ssl-domain <domain>`: The domain name to use for SSL provisioning. If not set, SSL will be disabled. (in progress)
+- `--target-port`: The port that your server should run on.  ProxyRunner will set the PORT environment variable to this value. Default: `3000`.
+- `--http-port`: The port to listen on for HTTP traffic. Default: `80`.
+- `--https-port`: The port to listen on for HTTPS traffic. Default: `443`.
+- `-l, --listen`: The address to which to bind the listener. Default: `localhost`.
+- `--ssl-domain`: The domain name to use for SSL provisioning. If not set, SSL will be disabled. (in progress)
 - `-v, --debug`: Enable verbose debug logs.
-- `--access-log <bool>`: Enable the access log. Default: `true`.
+- `--access-log`: Enable the access log. Default: `true`.
 - `--no-compress`: Disable Brotli, Zstandard and Gzip compression
 - `--http-idle-timeout`: The maximum time a client can be idle before the connection is closed. Default: `60s`.
 - `--http-read-timeout`: The maximum time a client can take to send the request headers. Default: `30s`.
@@ -59,17 +59,17 @@ Generate a customized Caddyfile by running:
 This command creates a Caddyfile in the specified directory, tailoring it with options for SSL, compression, and logging based on provided parameters.
 
 ### Command Line Arguments
-- `--folder-path <string>`: Directory to generate the Caddyfile in. Defaults to the current directory
-- `--http-host <string>`: Host address for the HTTP server. Default: `localhost`
-- `--http-port <string>`: The port for HTTP traffic. Default: `80`
-- `--https-port <string>`: The port for HTTP traffic. Default: `443`
-- `--enable-debug <bool>`: Enable verbose debug logs
-- `--access-log <bool>`: Enable the access log. Default: `true`
-- `--ssl-domain <string>`: The domain name for SSL. If empty, SSL is disabled
-- `--backend-port <string>`: THe port that the backend service listens on. Default is `8080`
-- `--https-enable <bool>`: Enable HTTPS configuration. Default `false`
-- `--compression-enable <bool>`: Enable response compression using gzip and zstd
-- `--anycable-enable <bool>`: Enable anycable
+- `--folder-path`: Directory to generate the Caddyfile in. Defaults to the current directory
+- `--http-host`: Host address for the HTTP server. Default: `localhost`
+- `--http-port`: The port for HTTP traffic. Default: `80`
+- `--https-port`: The port for HTTP traffic. Default: `443`
+- `--enable-debug`: Enable verbose debug logs
+- `--access-log`: Enable the access log. Default: `true`
+- `--ssl-domain`: The domain name for SSL. If empty, SSL is disabled
+- `--backend-port`: THe port that the backend service listens on. Default is `8080`
+- `--https-enable`: Enable HTTPS configuration. Default `false`
+- `--compression-enable`: Enable response compression using gzip and zstd
+- `--anycable-enable`: Enable anycable
 
 ### Running the application
 
