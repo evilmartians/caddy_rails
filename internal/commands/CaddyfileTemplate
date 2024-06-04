@@ -4,6 +4,7 @@
   {{if .AccessLog}}log{{end}}
   https_port {{.HttpsPort}}
   http_port {{.HttpPort}}
+  {{if .AnyCableEnable}}order anycable before reverse_proxy{{end}}
 }
 
 http://{{.HttpHost}}:{{.HttpPort}} {
@@ -16,8 +17,16 @@ http://{{.HttpHost}}:{{.HttpPort}} {
     }
   }
 
-  {{if .EnableCompression}}
-  encode br gzip zstd
+  {{if .CompressionEnable}}
+  encode gzip zstd
+  {{end}}
+
+  {{if .AnyCableEnable}}
+  anycable {
+      #log_level debug
+      #redis_url redis://localhost:6379/5
+      #http_broadcast_port 8090
+  }
   {{end}}
 
   reverse_proxy @notStatic {
@@ -48,7 +57,7 @@ https://{{if .SSLDomain}}{{.SSLDomain}}{{else}}{{.HttpHost}}{{end}} {
     }
   }
 
-  {{if .EnableCompression}}
+  {{if .CompressionEnable}}
   encode gzip zstd
   {{end}}
 

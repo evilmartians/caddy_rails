@@ -9,7 +9,6 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
-	"time"
 )
 
 const DefaultPidPath = "tmp/pids/server.pid"
@@ -93,22 +92,8 @@ func (p *UpstreamProcess) Stop() error {
 		if err != nil {
 			return err
 		}
-		if err := process.Signal(syscall.SIGTERM); err != nil {
-			return err
-		}
 
-		// Wait for the process to exit with a timeout
-		done := make(chan struct{})
-		go func() {
-			_, _ = process.Wait()
-			close(done)
-		}()
-		select {
-		case <-done:
-			return nil
-		case <-time.After(5 * time.Second):
-			return errors.New("process did not terminate in time")
-		}
+		return process.Signal(syscall.SIGTERM)
 	}
 
 	if p.cmd != nil && p.cmd.Process != nil {

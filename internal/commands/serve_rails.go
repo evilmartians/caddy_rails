@@ -5,7 +5,7 @@ import (
 	"github.com/caddyserver/caddy/v2"
 	caddycmd "github.com/caddyserver/caddy/v2/cmd"
 	_ "github.com/caddyserver/caddy/v2/modules/standard"
-	"github.com/evilmartians/caddy_thruster/internal/utils"
+	"github.com/evilmartians/caddy_rails/internal/utils"
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
@@ -20,31 +20,32 @@ func init() {
 The proxy_runner command runs an external server specified as its argument and
 sets up a reverse proxy to forward requests to it.`,
 		CobraFunc: func(cmd *cobra.Command) {
-			cmd.Flags().String("pid_file", "", "Path to the PID file to control an existing process")
+			cmd.Flags().String("pid-file", "", "Path to the PID file to control an existing process")
 			cmd.Flags().Bool("stop", false, "Stop the running process")
 			cmd.Flags().Bool("phased-restart", false, "Perform a phased restart of the server")
+			cmd.Flags().Bool("anycable-enabled", false, "Activate AnyCable")
 			cmd.Flags().String("server-type", "puma", "The type of server (puma or unicorn) to control")
-			cmd.Flags().Int("target_port", 3000, "The port that your server should run on. ProxyRunner will set PORT to this value when starting your server.")
-			cmd.Flags().String("http_port", "80", "The port to listen on for HTTP traffic.")
-			cmd.Flags().String("https_port", "443", "The port to listen on for HTTPS traffic.")
+			cmd.Flags().Int("target-port", 3000, "The port that your server should run on. ProxyRunner will set PORT to this value when starting your server.")
+			cmd.Flags().Int("http-port", 80, "The port to listen on for HTTP traffic.")
+			cmd.Flags().Int("https-port", 443, "The port to listen on for HTTPS traffic.")
 			cmd.Flags().StringP("listen", "l", "localhost", "The address to which to bind the listener")
-			cmd.Flags().String("ssl_domain", "", "The domain name to use for SSL provisioning. If not set, SSL will be disabled.")
-			cmd.Flags().StringP("files_path", "f", "", "The domain name to use for SSL provisioning. If not set, SSL will be disabled.")
+			cmd.Flags().String("ssl-domain", "", "The domain name to use for SSL provisioning. If not set, SSL will be disabled.")
+			cmd.Flags().StringP("files-path", "f", "", "The domain name to use for SSL provisioning. If not set, SSL will be disabled.")
 			cmd.Flags().BoolP("debug", "v", false, "Enable verbose debug logs")
-			cmd.Flags().Bool("access_log", true, "Enable the access log")
+			cmd.Flags().Bool("access-log", true, "Enable the access log")
 			cmd.Flags().Bool("no-compress", false, "Disable Zstandard and Gzip compression")
-			cmd.Flags().Duration("http_idle_timeout", 60*time.Second, "The maximum time in seconds that a client can be idle before the connection is closed.")
-			cmd.Flags().Duration("http_read_timeout", 30*time.Second, "The maximum time in seconds that a client can take to send the request headers.")
-			cmd.Flags().Duration("http_write_timeout", 30*time.Second, "The maximum time in seconds during which the client must read the response.")
-			cmd.RunE = caddycmd.WrapCommandFuncForCobra(cmdThruster)
+			cmd.Flags().Duration("http-idle-timeout", 60*time.Second, "The maximum time in seconds that a client can be idle before the connection is closed.")
+			cmd.Flags().Duration("http-read-timeout", 30*time.Second, "The maximum time in seconds that a client can take to send the request headers.")
+			cmd.Flags().Duration("http-write-timeout", 30*time.Second, "The maximum time in seconds during which the client must read the response.")
+			cmd.RunE = caddycmd.WrapCommandFuncForCobra(cmdServeRails)
 		},
 	})
 }
 
-func cmdThruster(fs caddycmd.Flags) (int, error) {
+func cmdServeRails(fs caddycmd.Flags) (int, error) {
 	caddy.TrapSignals()
 
-	pidFile := fs.String("pid_file")
+	pidFile := fs.String("pid-file")
 	stop := fs.Bool("stop")
 	phasedRestart := fs.Bool("phased-restart")
 	serverType := fs.String("server-type")
