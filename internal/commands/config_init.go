@@ -22,7 +22,6 @@ type TemplateParams struct {
 	AccessLog         bool
 	HttpHost          string
 	HttpPort          string
-	HttpsEnable       bool
 	AnyCableEnable    bool
 	CompressionEnable bool
 	BackendPort       string
@@ -45,7 +44,6 @@ This tool simplifies initial Caddyfile setup for custom server configurations.`,
 			cmd.Flags().String("ssl-domain", "", "Domain name for SSL. If empty, SSL is disabled")
 			cmd.Flags().String("backend-port", "3000", "Port that the backend service listens on")
 			cmd.Flags().Bool("access-log", false, "Enable logging of access requests")
-			cmd.Flags().Bool("https-enable", false, "Enable HTTPS configuration")
 			cmd.Flags().Bool("compression-enable", true, "Enable response compression using gzip and zstd")
 			cmd.RunE = caddycmd.WrapCommandFuncForCobra(cmdGenerateCaddyfile)
 		},
@@ -62,7 +60,6 @@ func cmdGenerateCaddyfile(fs caddycmd.Flags) (int, error) {
 		Debug:             fs.Bool("debug-enable"),
 		SSLDomain:         fs.String("ssl-domain"),
 		AccessLog:         fs.Bool("access-log"),
-		HttpsEnable:       fs.Bool("https-enable"),
 		CompressionEnable: fs.Bool("compression-enable"),
 		AnyCableEnable:    fs.Bool("anycable-enable"),
 		HttpHost:          fs.String("http-host"),
