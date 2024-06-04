@@ -40,7 +40,7 @@ This tool simplifies initial Caddyfile setup for custom server configurations.`,
 			cmd.Flags().String("http-port", "80", "Port for HTTP traffic.")
 			cmd.Flags().String("https-port", "443", "Port for HTTPS traffic.")
 			cmd.Flags().Bool("debug-enable", false, "Enable debug mode for detailed logs")
-			cmd.Flags().Bool("anycable-enable", false, "Enable debug mode for detailed logs")
+			cmd.Flags().Bool("anycable-enable", false, "Enable AnyCable")
 			cmd.Flags().String("ssl-domain", "", "Domain name for SSL. If empty, SSL is disabled")
 			cmd.Flags().String("backend-port", "3000", "Port that the backend service listens on")
 			cmd.Flags().Bool("access-log", false, "Enable logging of access requests")
