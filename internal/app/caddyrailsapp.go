@@ -6,7 +6,7 @@ import (
 	"github.com/caddyserver/caddy/v2/caddyconfig"
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
 	"github.com/caddyserver/caddy/v2/caddyconfig/httpcaddyfile"
-	"github.com/evilmartians/caddy_thruster/internal/utils"
+	"github.com/evilmartians/caddy_rails/internal/utils"
 )
 
 func init() {
