@@ -1,16 +1,25 @@
 .PHONY: build dist test bench clean
 
-PLATFORMS = linux darwin
-ARCHITECTURES = amd64 arm64
+COMMIT := $(shell git log --pretty=format:"%h" -n 1)
+VERSION := $(shell git tag -l --sort=-version:refname "v*" | head -n1)
+LD_FLAGS := "-s -w -X 'github.com/evilmartians/caddy_rails/version.Version=$(VERSION)' -X 'github.com/evilmartians/caddy_rails/version.Commit=$(COMMIT)'"
+
+PLATFORMS = linux darwin freebsd
+ARCHITECTURES = amd64 arm64 arm
 
 build:
-	go build -o bin/ ./cmd/...
+	go build -ldflags $(LD_FLAGS) -o bin/ ./cmd/...
 
-dist:
+build-all: clean
 	@for platform in $(PLATFORMS); do \
 		for arch in $(ARCHITECTURES); do \
-			GOOS=$$platform GOARCH=$$arch go build -o dist/thrust-$$platform-$$arch ./cmd/...; \
-		done \
+			if [ "$$platform" = "darwin" ] && [ "$$arch" = "arm" ]; then \
+				continue; \
+			fi; \
+			output="dist/caddy-rails-$$platform-$$arch"; \
+			echo "Building for $$platform/$$arch..."; \
+			env GOOS=$$platform GOARCH=$$arch go build -ldflags $(LD_FLAGS) -o $$output ./cmd/caddy_rails/main.go; \
+		done; \
 	done
 
 test:

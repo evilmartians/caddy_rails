@@ -76,7 +76,7 @@ This command creates a Caddyfile in the specified directory, tailoring it with o
 After the generation the `Caddyfile` you can run project by this command
 
 ```bash
-    ./caddy_rails run
+./caddy_rails run
 ```
 
 **Important:** The caddy_rails can not have enough permissions for ports 80 and 443.

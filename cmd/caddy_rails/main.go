@@ -16,7 +16,7 @@ func main() {
 	flag.Parse()
 
 	if *versionFlag {
-		fmt.Println(version.Version)
+		fmt.Printf("Version: %s\nCommit: %s\n", version.Version, version.Commit)
 		os.Exit(0)
 	}
 
