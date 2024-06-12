@@ -4,7 +4,7 @@ go 1.22.1
 
 require (
 	github.com/caddyserver/caddy/v2 v2.8.4
-	github.com/caddyserver/certmagic v0.21.3
+	github.com/evilmartians/caddy_anycable v0.0.0-20240603141509-6f07f068c620
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/zap v1.27.0
@@ -14,7 +14,6 @@ require (
 	github.com/FZambia/sentinel v1.1.1 // indirect
 	github.com/anycable/anycable-go v1.5.1 // indirect
 	github.com/bufbuild/protocompile v0.13.0 // indirect
-	github.com/evilmartians/caddy_anycable v0.0.0-20240603141509-6f07f068c620
 	github.com/fullstorydev/grpchan v1.1.1 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/gomodule/redigo v1.9.2 // indirect
@@ -53,6 +52,7 @@ require (
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/aryann/difflib v0.0.0-20210328193216-ff5ff6dc229b // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/caddyserver/certmagic v0.21.3 // indirect
 	github.com/caddyserver/zerossl v0.1.3 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect

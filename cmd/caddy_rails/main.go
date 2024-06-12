@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	caddycmd "github.com/caddyserver/caddy/v2/cmd"
-	_ "github.com/evilmartians/caddy_anycable"
 	_ "github.com/evilmartians/caddy_rails/internal/app"
 	_ "github.com/evilmartians/caddy_rails/internal/commands"
 	"github.com/evilmartians/caddy_rails/version"

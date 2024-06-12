@@ -25,7 +25,7 @@ sets up a reverse proxy to forward requests to it.`,
 			cmd.Flags().Bool("phased-restart", false, "Perform a phased restart of the server")
 			cmd.Flags().Bool("anycable-enabled", false, "Activate AnyCable")
 			cmd.Flags().String("server-type", "puma", "The type of server (puma or unicorn) to control")
-			cmd.Flags().Int("target-port", 3000, "The port that your server should run on. ProxyRunner will set PORT to this value when starting your server.")
+			cmd.Flags().Int("target-port", 3000, "The port that your server should run on. caddy-rails will set this values to the PORT env variable when starting your server.")
 			cmd.Flags().Int("http-port", 80, "The port to listen on for HTTP traffic.")
 			cmd.Flags().Int("https-port", 443, "The port to listen on for HTTPS traffic.")
 			cmd.Flags().StringP("listen", "l", "localhost", "The address to which to bind the listener")
@@ -101,6 +101,9 @@ func loadConfigIfNeeded() bool {
 }
 
 func runUpstreamProcess(fs caddycmd.Flags, pidFile string) (int, error) {
+	// Set PORT to be inherited by the upstream process.
+	os.Setenv("PORT", fmt.Sprintf("%d", fs.Int("target-port")))
+
 	upstream := utils.NewUpstreamProcess(fs.Arg(0), fs.Args()[1:], true, pidFile)
 	exitCode, err := upstream.Run()
 	if err != nil {
