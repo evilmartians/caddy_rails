@@ -61,34 +61,36 @@ func createEncodeRoute() caddyhttp.Route {
 
 func createAnyCableRoute() caddyhttp.Route {
 	anyCableHandler := caddy_anycable.AnyCableHandler{}
-
 	anyCableOptions := os.Getenv("ANYCABLE_OPT")
 	if anyCableOptions != "" {
 		options := strings.Split(anyCableOptions, " ")
 		anyCableHandler.Options = options
 	}
 
-	if err := anyCableHandler.Provision(caddy.Context{}); err != nil {
-		log.Fatalf("Failed to provision anycable handler: %v", err)
-	}
-
 	return caddyhttp.Route{
 		HandlersRaw: []json.RawMessage{caddyconfig.JSONModuleObject(anyCableHandler, "handler", "anycable", nil)},
+		MatcherSetsRaw: []caddy.ModuleMap{
+			{
+				"path": caddyconfig.JSON(caddyhttp.MatchPath{"/cable*"}, nil),
+			},
+		},
 	}
 }
 
 func createReverseProxyRoute(fs cmd.Flags) caddyhttp.Route {
 	reverseProxyHandler := reverseproxy.Handler{
-		TransportRaw: caddyconfig.JSONModuleObject(reverseproxy.HTTPTransport{}, "protocol", "http", nil),
 		Upstreams: reverseproxy.UpstreamPool{
 			{Dial: fmt.Sprintf("%s:%d", fs.String("listen"), fs.Int("target-port"))},
 		},
 		Headers: &headers.Handler{
 			Request: &headers.HeaderOps{
-				Set: map[string][]string{"Host": {"{http.reverse_proxy.upstream.hostport}"}},
+				Set: map[string][]string{
+					"Host": {"{http.reverse_proxy.upstream.hostport}"},
+				},
 			},
 		},
 	}
+
 	return caddyhttp.Route{
 		HandlersRaw: []json.RawMessage{caddyconfig.JSONModuleObject(reverseProxyHandler, "handler", "reverse_proxy", nil)},
 	}
@@ -162,18 +164,19 @@ func createCaddyConfig(httpApp caddyhttp.App, debug bool) *caddy.Config {
 func createGroupedRoutes(fs cmd.Flags) caddyhttp.Route {
 	routes := caddyhttp.RouteList{}
 
+	if fs.Bool("anycable-enabled") {
+		routes = append(routes, createAnyCableRoute())
+	}
+
+	routes = append(routes, createReverseProxyRoute(fs))
+
 	if !fs.Bool("no-compress") {
 		routes = append(routes, createEncodeRoute())
 	}
 
 	routes = append(routes,
-		createReverseProxyRoute(fs),
 		createFileServerRoute(fs),
 	)
-
-	if fs.Bool("anycable-enabled") {
-		routes = append(routes, createAnyCableRoute())
-	}
 
 	subroute := caddyhttp.Subroute{Routes: routes}
 

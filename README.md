@@ -1,4 +1,4 @@
-# Caddy Thruster
+# Caddy Rails
 
 CaddyRails is a reverse proxy module for Ruby on Rails designed to integrate with Caddy, facilitating features like reverse proxying, automatic HTTPS, compression, and more.
 
@@ -6,7 +6,7 @@ CaddyRails is a reverse proxy module for Ruby on Rails designed to integrate wit
 
 - **Reverse Proxy:** Simplifies forwarding requests to your application.
 - **Automatic HTTPS:** Automatically manages SSL/TLS certificates. (Currently in progress)
-- **Compression:** Supports Gzip, Brotli and Zstd for reducing data transfer sizes.
+- **Compression:** Supports Gzip, and Zstd for reducing data transfer sizes.
 - **Access Logging:** Enables detailed logging of incoming requests.
 - **Connection Timeouts:** Customizable read, write, and idle timeouts for connections.
 - **Debugging:** Provides extensive debug logs to troubleshoot issues.
@@ -32,14 +32,14 @@ The tool sets up a reverse proxy automatically.
 ```
 
 ### Command Line Arguments
-- `--target-port`: The port that your server should run on.  ProxyRunner will set the PORT environment variable to this value. Default: `3000`.
+- `--target-port`: The port that your server should run on.  caddy-server will set this value to the PORT environment variable. Default: `3000`.
 - `--http-port`: The port to listen on for HTTP traffic. Default: `80`.
 - `--https-port`: The port to listen on for HTTPS traffic. Default: `443`.
 - `-l, --listen`: The address to which to bind the listener. Default: `localhost`.
-- `--ssl-domain`: The domain name to use for SSL provisioning. If not set, SSL will be disabled. (in progress)
+- `--ssl-domain`: The domain name to use for SSL provisioning. If not set, SSL will be disabled.
 - `-v, --debug`: Enable verbose debug logs.
 - `--access-log`: Enable the access log. Default: `true`.
-- `--no-compress`: Disable Brotli, Zstandard and Gzip compression
+- `--no-compress`: Disable Zstandard and Gzip compression
 - `--http-idle-timeout`: The maximum time a client can be idle before the connection is closed. Default: `60s`.
 - `--http-read-timeout`: The maximum time a client can take to send the request headers. Default: `30s`.
 - `--http-write-timeout`: The maximum time during which the client must read the response. Default: `30s`.
@@ -67,7 +67,6 @@ This command creates a Caddyfile in the specified directory, tailoring it with o
 - `--access-log`: Enable the access log. Default: `true`
 - `--ssl-domain`: The domain name for SSL. If empty, SSL is disabled
 - `--backend-port`: THe port that the backend service listens on. Default is `8080`
-- `--https-enable`: Enable HTTPS configuration. Default `false`
 - `--compression-enable`: Enable response compression using gzip and zstd
 - `--anycable-enable`: Enable anycable
 
