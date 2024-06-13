@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/caddyconfig"
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
@@ -22,12 +21,23 @@ type CaddyRailsApp struct {
 	stopCh  chan struct{}
 }
 
-func (a *CaddyRailsApp) Provision(ctx caddy.Context) error {
+func (a *CaddyRailsApp) Provision(_ caddy.Context) error {
+	var command string
+	var arguments []string
+
 	if len(a.Command) == 0 {
-		return fmt.Errorf("there is not any command")
+		command = ""
+	} else {
+		command = a.Command[0]
+		arguments = a.Command[1:]
 	}
 
-	a.process = utils.NewUpstreamProcess(a.Command[0], a.Command[1:], false, a.PidFile)
+	process, err := utils.NewUpstreamProcess(command, arguments, false, a.PidFile)
+	if err != nil {
+		return err
+	}
+
+	a.process = process
 	a.stopCh = make(chan struct{})
 
 	return nil
