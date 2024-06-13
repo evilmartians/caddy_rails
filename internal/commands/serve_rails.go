@@ -1,23 +1,37 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 	"github.com/caddyserver/caddy/v2"
 	caddycmd "github.com/caddyserver/caddy/v2/cmd"
 	_ "github.com/caddyserver/caddy/v2/modules/standard"
 	"github.com/evilmartians/caddy_rails/internal/utils"
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 	"os"
 	"path/filepath"
 	"time"
 )
+
+const (
+	errStopUpstream       = "failed to stop upstream process: %v"
+	errPhasedRestart      = "failed to phased restart upstream process: %v"
+	errRunUpstreamProcess = "failed to run upstream process: %v"
+	errLoadCaddyConfig    = "Caddyfile loading error"
+	errAccessCaddyFile    = "Error accessing Caddyfile"
+	infoCaddyFileAbsent   = "Caddyfile does not exist. The server is running direct way"
+	infoCaddyFileLoaded   = "Caddyfile is correct and loaded. The server is running via Caddyfile"
+)
+
+var logger = utils.NewCaddyRailsLogger()
 
 func init() {
 	caddycmd.RegisterCommand(caddycmd.Command{
 		Name:  "serve-rails",
 		Short: "Runs an external server and sets up a reverse proxy to it",
 		Long: `
-The proxy_runner command runs an external server specified as its argument and
+The serve-rails command runs an external server specified as its argument and
 sets up a reverse proxy to forward requests to it.`,
 		CobraFunc: func(cmd *cobra.Command) {
 			cmd.Flags().String("pid-file", "", "Path to the PID file to control an existing process")
@@ -51,18 +65,21 @@ func cmdServeRails(fs caddycmd.Flags) (int, error) {
 	serverType := fs.String("server-type")
 
 	if stop || phasedRestart {
-		upstream := utils.NewUpstreamProcess("", nil, false, pidFile)
+		upstream, err := utils.NewUpstreamProcess("", nil, false, pidFile)
+		if err != nil {
+			return 1, err
+		}
 
 		if stop {
 			if err := upstream.Stop(); err != nil {
-				return 1, fmt.Errorf("failed to stop upstream process: %v", err)
+				return 1, fmt.Errorf(errStopUpstream, err)
 			}
 			return 0, nil
 		}
 
 		if phasedRestart {
 			if err := upstream.PhasedRestart(serverType); err != nil {
-				return 1, fmt.Errorf("failed to phased restart upstream process: %v", err)
+				return 1, fmt.Errorf(errPhasedRestart, err)
 			}
 			return 0, nil
 		}
@@ -70,10 +87,6 @@ func cmdServeRails(fs caddycmd.Flags) (int, error) {
 
 	if loadConfigIfNeeded() {
 		select {}
-	}
-
-	if fs.NArg() < 1 {
-		return 1, fmt.Errorf("usage: serve_rails <command> [arguments...]")
 	}
 
 	if err := utils.StartCaddyReverseProxy(fs); err != nil {
@@ -88,26 +101,50 @@ func loadConfigIfNeeded() bool {
 	configFile := filepath.Join(curdir, "Caddyfile")
 
 	if _, err := os.Stat(configFile); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			logger.Info(infoCaddyFileAbsent)
+		} else {
+			logger.Error(errAccessCaddyFile, zap.Error(err))
+		}
 		return false
 	}
 
-	if config, _, err := caddycmd.LoadConfig(configFile, ""); err == nil {
-		if err = caddy.Load(config, true); err == nil {
-			return true
-		}
+	config, _, err := caddycmd.LoadConfig(configFile, "")
+	if err != nil {
+		logger.Error(errLoadCaddyConfig, zap.Error(err))
+
+		return false
 	}
 
-	return false
+	err = caddy.Load(config, true)
+	if err != nil {
+		logger.Error(errLoadCaddyConfig, zap.Error(err))
+
+		return false
+	}
+
+	logger.Info(infoCaddyFileLoaded)
+
+	return true
 }
 
 func runUpstreamProcess(fs caddycmd.Flags, pidFile string) (int, error) {
 	// Set PORT to be inherited by the upstream process.
 	os.Setenv("PORT", fmt.Sprintf("%d", fs.Int("target-port")))
 
-	upstream := utils.NewUpstreamProcess(fs.Arg(0), fs.Args()[1:], true, pidFile)
+	var args []string
+	if len(fs.Args()) > 0 {
+		args = fs.Args()[1:]
+	}
+
+	upstream, err := utils.NewUpstreamProcess(fs.Arg(0), args, true, pidFile)
+	if err != nil {
+		return 1, err
+	}
+
 	exitCode, err := upstream.Run()
 	if err != nil {
-		return 1, fmt.Errorf("failed to run upstream process: %v", err)
+		return 1, fmt.Errorf(errRunUpstreamProcess, err)
 	}
 	return exitCode, nil
 }

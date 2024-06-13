@@ -9,7 +9,7 @@ import (
 
 func TestUpstreamProcess(t *testing.T) {
 	t.Run("return exit code on exit", func(t *testing.T) {
-		p := NewUpstreamProcess("false", []string{}, true, "")
+		p, _ := NewUpstreamProcess("false", []string{}, true, "")
 		exitCode, err := p.Run()
 
 		assert.NoError(t, err)
@@ -20,14 +20,14 @@ func TestUpstreamProcess(t *testing.T) {
 		var exitCode int
 		var err error
 
-		p := NewUpstreamProcess("sleep", []string{"10"}, true, "")
+		p, _ := NewUpstreamProcess("sleep", []string{"10"}, true, "")
 
 		go func() {
 			exitCode, err = p.Run()
 		}()
 
 		<-p.Started
-		p.Signal(syscall.SIGTERM)
+		p.signal(syscall.SIGTERM)
 
 		assert.NoError(t, err)
 		assert.Equal(t, 0, exitCode)
