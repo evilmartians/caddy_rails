@@ -28,10 +28,10 @@ var logger = utils.NewCaddyRailsLogger()
 
 func init() {
 	caddycmd.RegisterCommand(caddycmd.Command{
-		Name:  "serve-rails",
+		Name:  "serve",
 		Short: "Runs an external server and sets up a reverse proxy to it",
 		Long: `
-The serve-rails command runs an external server specified as its argument and
+The serve command runs an external server specified as its argument and
 sets up a reverse proxy to forward requests to it.`,
 		CobraFunc: func(cmd *cobra.Command) {
 			cmd.Flags().String("pid-file", "", "Path to the PID file to control an existing process")
