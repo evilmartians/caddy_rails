@@ -1,5 +1,5 @@
 {
-  serve-rails bin/rails s -p {{.BackendPort}}
+  serve bin/rails s -p {{.BackendPort}}
   {{if .Debug}}debug{{end}}
   {{if .AccessLog}}log{{end}}
   https_port {{.HttpsPort}}

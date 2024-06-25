@@ -5,23 +5,30 @@ import (
 	"github.com/caddyserver/caddy/v2/caddyconfig"
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
 	"github.com/caddyserver/caddy/v2/caddyconfig/httpcaddyfile"
-	"github.com/evilmartians/caddy_rails/internal/utils"
+	"github.com/evilmartians/caddy_rails/internal/logger"
+	"github.com/evilmartians/caddy_rails/internal/process"
+	"os"
 )
+
+var caddyLogger = logger.NewCaddyRailsLogger()
 
 func init() {
 	caddy.RegisterModule(CaddyRailsApp{})
-	httpcaddyfile.RegisterGlobalOption("serve-rails", parseGlobalCaddyfileBlock)
+	httpcaddyfile.RegisterGlobalOption("serve", parseGlobalCaddyfileBlock)
 }
 
 type CaddyRailsApp struct {
 	Command []string `json:"command,omitempty"`
 	PidFile string   `json:"pid_file,omitempty"`
 
-	process *utils.UpstreamProcess
-	stopCh  chan struct{}
+	process *process.UpstreamProcess
 }
 
 func (a *CaddyRailsApp) Provision(_ caddy.Context) error {
+	return nil
+}
+
+func (a *CaddyRailsApp) Start() error {
 	var command string
 	var arguments []string
 
@@ -32,55 +39,50 @@ func (a *CaddyRailsApp) Provision(_ caddy.Context) error {
 		arguments = a.Command[1:]
 	}
 
-	process, err := utils.NewUpstreamProcess(command, arguments, false, a.PidFile)
+	proc, err := process.NewUpstreamProcess(command, arguments, false, a.PidFile)
 	if err != nil {
 		return err
 	}
 
-	a.process = process
-	a.stopCh = make(chan struct{})
+	a.process = proc
 
-	return nil
-}
+	caddyLogger.Info("CaddyRails was started")
 
-func (a CaddyRailsApp) Start() error {
-	_, err := a.process.Run()
-
-	return err
+	return a.process.Run()
 }
 
 func (a *CaddyRailsApp) Stop() error {
-	caddy.Log().Info("CaddyRails stopped")
-
-	if a.process != nil {
-		return a.process.Stop()
+	err := a.process.Shutdown(os.Interrupt)
+	if err != nil {
+		return err
 	}
 
-	close(a.stopCh)
+	caddyLogger.Info("CaddyRails stopped")
+
 	return nil
 }
 
 func (a CaddyRailsApp) CaddyModule() caddy.ModuleInfo {
 	return caddy.ModuleInfo{
-		ID:  "serve-rails",
+		ID:  "serve",
 		New: func() caddy.Module { return new(CaddyRailsApp) },
 	}
 }
 
 func parseGlobalCaddyfileBlock(d *caddyfile.Dispenser, _ interface{}) (interface{}, error) {
-	var caddy_rails CaddyRailsApp
+	var caddyRails CaddyRailsApp
 
 	if d.NextArg() && d.NextArg() {
-		caddy_rails.Command = append([]string{d.Val()}, d.RemainingArgs()...)
+		caddyRails.Command = append([]string{d.Val()}, d.RemainingArgs()...)
 	}
 
 	for d.NextBlock(0) {
 		switch d.Val() {
 		case "command":
-			caddy_rails.Command = d.RemainingArgs()
+			caddyRails.Command = d.RemainingArgs()
 		case "pid_file":
 			if d.NextArg() {
-				caddy_rails.PidFile = d.Val()
+				caddyRails.PidFile = d.Val()
 			} else {
 				return nil, d.ArgErr()
 			}
@@ -88,8 +90,8 @@ func parseGlobalCaddyfileBlock(d *caddyfile.Dispenser, _ interface{}) (interface
 	}
 
 	return httpcaddyfile.App{
-		Name:  "serve-rails",
-		Value: caddyconfig.JSON(caddy_rails, nil),
+		Name:  "serve",
+		Value: caddyconfig.JSON(caddyRails, nil),
 	}, nil
 }
 

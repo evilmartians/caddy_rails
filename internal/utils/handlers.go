@@ -12,6 +12,7 @@ import (
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp/headers"
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp/reverseproxy"
 	"github.com/evilmartians/caddy_anycable"
+	"github.com/evilmartians/caddy_rails/internal/app"
 	"go.uber.org/zap"
 	"log"
 	"os"
@@ -46,7 +47,7 @@ func createEncodeRoute() caddyhttp.Route {
 		log.Fatalf("Failed to load zstd module: %v", err)
 	}
 
-	encodeRoute := caddyhttp.Route{
+	return caddyhttp.Route{
 		HandlersRaw: []json.RawMessage{caddyconfig.JSONModuleObject(encode.Encode{
 			EncodingsRaw: caddy.ModuleMap{
 				"zstd": caddyconfig.JSON(zstd.New(), nil),
@@ -55,16 +56,13 @@ func createEncodeRoute() caddyhttp.Route {
 			Prefer: []string{"zstd", "gzip"},
 		}, "handler", "encode", nil)},
 	}
-
-	return encodeRoute
 }
 
 func createAnyCableRoute() caddyhttp.Route {
 	anyCableHandler := caddy_anycable.AnyCableHandler{}
 	anyCableOptions := os.Getenv("ANYCABLE_OPT")
 	if anyCableOptions != "" {
-		options := strings.Split(anyCableOptions, " ")
-		anyCableHandler.Options = options
+		anyCableHandler.Options = strings.Split(anyCableOptions, " ")
 	}
 
 	return caddyhttp.Route{
@@ -78,69 +76,57 @@ func createAnyCableRoute() caddyhttp.Route {
 }
 
 func createReverseProxyRoute(fs cmd.Flags) caddyhttp.Route {
-	reverseProxyHandler := reverseproxy.Handler{
-		Upstreams: reverseproxy.UpstreamPool{
-			{Dial: fmt.Sprintf("%s:%d", fs.String("listen"), fs.Int("target-port"))},
-		},
-		Headers: &headers.Handler{
-			Request: &headers.HeaderOps{
-				Set: map[string][]string{
-					"Host": {"{http.reverse_proxy.upstream.hostport}"},
+	return caddyhttp.Route{
+		HandlersRaw: []json.RawMessage{caddyconfig.JSONModuleObject(reverseproxy.Handler{
+			Upstreams: reverseproxy.UpstreamPool{
+				{Dial: fmt.Sprintf("%s:%d", fs.String("listen"), fs.Int("target-port"))},
+			},
+			Headers: &headers.Handler{
+				Request: &headers.HeaderOps{
+					Set: map[string][]string{
+						"Host": {"{http.reverse_proxy.upstream.hostport}"},
+					},
 				},
 			},
-		},
-	}
-
-	return caddyhttp.Route{
-		HandlersRaw: []json.RawMessage{caddyconfig.JSONModuleObject(reverseProxyHandler, "handler", "reverse_proxy", nil)},
+		}, "handler", "reverse_proxy", nil)},
 	}
 }
 
 func createFileServerRoute(fs cmd.Flags) caddyhttp.Route {
-	fileServerHandler := fileserver.FileServer{
-		Root: fs.String("files-path"),
-	}
-
 	return caddyhttp.Route{
-		HandlersRaw: []json.RawMessage{caddyconfig.JSONModuleObject(fileServerHandler, "handler", "file_server", nil)},
+		HandlersRaw: []json.RawMessage{caddyconfig.JSONModuleObject(fileserver.FileServer{
+			Root: fs.String("files-path"),
+		}, "handler", "file_server", nil)},
 	}
 }
 
 func createHTTPApp(fs cmd.Flags, route caddyhttp.Route) caddyhttp.App {
-	var actualPort int
-
-	httpPort := fs.Int("http-port")
-	httpsPort := fs.Int("https-port")
-
+	port := fs.Int("https-port")
 	if fs.String("ssl-domain") == "" {
-		actualPort = httpPort
-	} else {
-		actualPort = httpsPort
+		port = fs.Int("http-port")
 	}
 
-	httpServer := createServer(actualPort, caddyhttp.RouteList{route}, fs)
-
 	return caddyhttp.App{
-		HTTPPort:  httpPort,
-		HTTPSPort: httpsPort,
+		HTTPPort:  fs.Int("http-port"),
+		HTTPSPort: fs.Int("https-port"),
 		Servers: map[string]*caddyhttp.Server{
-			"rails": httpServer,
+			"rails": {
+				Listen:       []string{fmt.Sprintf(":%d", port)},
+				Routes:       caddyhttp.RouteList{route},
+				IdleTimeout:  caddy.Duration(fs.Duration("http-idle-timeout")),
+				ReadTimeout:  caddy.Duration(fs.Duration("http-read-timeout")),
+				WriteTimeout: caddy.Duration(fs.Duration("http-write-timeout")),
+				Logs:         getServerLogConfig(fs.Bool("access-log")),
+			},
 		},
 	}
 }
 
-func createServer(port int, routes caddyhttp.RouteList, fs cmd.Flags) *caddyhttp.Server {
-	server := &caddyhttp.Server{
-		Listen:       []string{fmt.Sprintf(":%d", port)},
-		Routes:       routes,
-		IdleTimeout:  caddy.Duration(fs.Duration("http-idle-timeout")),
-		ReadTimeout:  caddy.Duration(fs.Duration("http-read-timeout")),
-		WriteTimeout: caddy.Duration(fs.Duration("http-write-timeout")),
+func getServerLogConfig(enabled bool) *caddyhttp.ServerLogConfig {
+	if enabled {
+		return &caddyhttp.ServerLogConfig{}
 	}
-	if fs.Bool("access-log") {
-		server.Logs = &caddyhttp.ServerLogConfig{}
-	}
-	return server
+	return nil
 }
 
 func createCaddyConfig(httpApp caddyhttp.App, debug bool) *caddy.Config {
@@ -151,7 +137,10 @@ func createCaddyConfig(httpApp caddyhttp.App, debug bool) *caddy.Config {
 				Persist: new(bool),
 			},
 		},
-		AppsRaw: caddy.ModuleMap{"http": caddyconfig.JSON(httpApp, nil)},
+		AppsRaw: caddy.ModuleMap{
+			"http":  caddyconfig.JSON(httpApp, nil),
+			"serve": caddyconfig.JSON(app.CaddyRailsApp{}, nil),
+		},
 	}
 	if debug {
 		cfg.Logging = &caddy.Logging{
@@ -174,13 +163,9 @@ func createGroupedRoutes(fs cmd.Flags) caddyhttp.Route {
 		routes = append(routes, createEncodeRoute())
 	}
 
-	routes = append(routes,
-		createFileServerRoute(fs),
-	)
-
-	subroute := caddyhttp.Subroute{Routes: routes}
+	routes = append(routes, createFileServerRoute(fs))
 
 	return caddyhttp.Route{
-		HandlersRaw: []json.RawMessage{caddyconfig.JSONModuleObject(subroute, "handler", "subroute", nil)},
+		HandlersRaw: []json.RawMessage{caddyconfig.JSONModuleObject(caddyhttp.Subroute{Routes: routes}, "handler", "subroute", nil)},
 	}
 }
