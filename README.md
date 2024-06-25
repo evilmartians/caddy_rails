@@ -100,12 +100,12 @@ So you can change these ports by `--http-port` and `--https-port`, or run it via
 You can manage the running Rails application in another console session using:
 
 #### Phased/Hot Restart
-- Stopping the Server: `./caddy_rails serve-rails --stop`
-- Restarting the Server: `./caddy_rails serve-rails --phased-restart`
+- Stopping the Server: `./caddy_rails serve --stop`
+- Restarting the Server: `./caddy_rails serve --phased-restart`
 - Phased Restart for Puma or Hot Restart for Unicorn:
 ```bash
-./caddy_rails serve-rails --phased_restart --server-type puma
-./caddy_rails serve-rails --phased_restart --server-type unicorn 
+./caddy_rails serve --phased_restart --server-type puma
+./caddy_rails serve --phased_restart --server-type unicorn 
 ```
 
 These commands facilitate seamless application management, ensuring minimal downtime and flexible maintenance operations.
