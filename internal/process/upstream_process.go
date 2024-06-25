@@ -33,7 +33,7 @@ func NewUpstreamProcess(command string, arg []string, syncMode bool, pidFile str
 	command, arguments := determineCommand(command, arg)
 
 	if command == "" && !fileExists(pidFile) {
-		log.Error("For running an application, you must provide either an argument to the command serve-rails or ensure the presence of " + RailsExecutionFile)
+		log.Error("For running an application, you must provide either an argument to the command serve or ensure the presence of " + RailsExecutionFile)
 		return nil, fmt.Errorf("for running an application, you must provide either an argument to the command serve-rails or ensure the presence of %s file", RailsExecutionFile)
 	}
 

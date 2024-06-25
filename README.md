@@ -29,18 +29,18 @@ Once compiled, ensure that the `caddy_rails` binary is located within your Rails
 
 To start CaddyRails with the default Rails server command, simply run the following command. This will automatically find the `bin/rails` file and run the Rails server using the server command:
 ```bash
-./caddy_rails serve-rails --https_port 8443 --http_port 8012 --target_port 3000
+./caddy_rails serve --https_port 8443 --http_port 8012 --target_port 3000
 ```
 
 ### Specifying a Custom Command
 
-If you need to specify a custom command or additional arguments, you can provide them directly to `serve-rails`:
+If you need to specify a custom command or additional arguments, you can provide them directly to `serve`:
 
 ```bash
-./caddy_rails serve-rails bin/rails s --https_port 8443 --http_port 8012 --target_port 3000
+./caddy_rails serve bin/rails s --https_port 8443 --http_port 8012 --target_port 3000
 ```
 
-By default, serve-rails will locate the bin/rails file and run the Rails server using the server command. If no custom command is provided, this is the default behavior.
+By default, serve will locate the bin/rails file and run the Rails server using the server command. If no custom command is provided, this is the default behavior.
 
 ### Error Handling
 
