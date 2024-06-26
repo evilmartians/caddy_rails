@@ -4,7 +4,7 @@ go 1.22.1
 
 require (
 	github.com/caddyserver/caddy/v2 v2.8.4
-	github.com/evilmartians/caddy_anycable v0.0.0-20240603141509-6f07f068c620
+	github.com/evilmartians/caddy_anycable v0.0.0-20240626162629-db4b2176d1e1
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/zap v1.27.0

@@ -147,6 +147,8 @@ github.com/envoyproxy/go-control-plane v0.9.9-0.20210217033140-668b12f5399d/go.m
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/evilmartians/caddy_anycable v0.0.0-20240603141509-6f07f068c620 h1:+LKmyGmTbrlrQFzAUzCf+bhXACr0Xhn/sc2tOgt5u6I=
 github.com/evilmartians/caddy_anycable v0.0.0-20240603141509-6f07f068c620/go.mod h1:M1nrCsrYfRicY07Pey8vXOyCyFe5ESeu/ApjzlIXS+A=
+github.com/evilmartians/caddy_anycable v0.0.0-20240626162629-db4b2176d1e1 h1:JB6O5+8hAUhOrES+bTuC7LFM5FIUMJWwFtuFCFmdnc8=
+github.com/evilmartians/caddy_anycable v0.0.0-20240626162629-db4b2176d1e1/go.mod h1:G8xpm3fPuU8P50AnMdEmy2T0JaLWdf7OHVUdFOZ0tLM=
 github.com/felixge/httpsnoop v1.0.4 h1:NFTV2Zj1bL4mc9sqWACXbQFVBBg2W3GPvqp8/ESS2Wg=
 github.com/felixge/httpsnoop v1.0.4/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSwevea8zH2U=
 github.com/frankban/quicktest v1.14.6 h1:7Xjx+VpznH+oBnejlPUj8oUpdxnVs4f8XU8WnHkI4W8=
