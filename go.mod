@@ -4,7 +4,7 @@ go 1.22.1
 
 require (
 	github.com/caddyserver/caddy/v2 v2.8.4
-	github.com/evilmartians/caddy_anycable v0.0.0-20240626162629-db4b2176d1e1
+	github.com/evilmartians/caddy_anycable v0.0.0-20240627131046-706fb6153510
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/zap v1.27.0
@@ -12,7 +12,7 @@ require (
 
 require (
 	github.com/FZambia/sentinel v1.1.1 // indirect
-	github.com/anycable/anycable-go v1.5.1 // indirect
+	github.com/anycable/anycable-go v1.5.2 // indirect
 	github.com/bufbuild/protocompile v0.13.0 // indirect
 	github.com/fullstorydev/grpchan v1.1.1 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
